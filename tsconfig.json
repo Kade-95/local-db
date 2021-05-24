@@ -1,0 +1,12 @@
+{
+    // "compileOnSave": true
+    "compilerOptions": {
+        "outDir": "./dist",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "es6",
+        "target": "es2015",
+        "allowJs": true,
+        "moduleResolution": "node"
+    },
+}
