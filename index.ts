@@ -1,2 +1,2 @@
-import { LocalDB } from "./src/local.storage";
-export { LocalDB };
+import { LoneDB } from "./src/local.storage";
+export { LoneDB };

@@ -1,7 +1,7 @@
 import { v4 as uuidV4 } from "uuid";
-import { LocalDocument } from "./models/query.model";
+import { LoneDocument } from "./models/query.model";
 
-export class LocalDB<T>{
+export class LoneDB<T>{
     private get rawValue() {
         return localStorage.getItem(this.name);
     }
@@ -17,7 +17,7 @@ export class LocalDB<T>{
 
     private getValue() {
         let data = this.rawValue;
-        let value: LocalDocument<T>[] = [];
+        let value: LoneDocument<T>[] = [];
 
         try {
             value = JSON.parse(data as string) as [];
@@ -33,7 +33,7 @@ export class LocalDB<T>{
             this.setValue([]);
     }
 
-    find(doc?: Partial<LocalDocument<T>>) {
+    find(doc?: Partial<LoneDocument<T>>) {
         return doc
             ? this.value.filter(v => {
                 let flag: boolean = false;
@@ -50,7 +50,7 @@ export class LocalDB<T>{
             : this.value;
     }
 
-    findOne(doc?: Partial<LocalDocument<T>>) {
+    findOne(doc?: Partial<LoneDocument<T>>) {
         return doc
             ? this.value.find(v => {
                 let flag: boolean = false;
@@ -74,7 +74,7 @@ export class LocalDB<T>{
 
         this.setValue(data);
 
-        return docs as LocalDocument<T>[];
+        return docs as LoneDocument<T>[];
     }
 
     insertOne(doc: T) {
@@ -82,11 +82,11 @@ export class LocalDB<T>{
         data.push({ _id: uuidV4(), ...doc });
         this.setValue(data);
 
-        return doc as LocalDocument<T>;
+        return doc as LoneDocument<T>;
     }
 
-    update(param: Partial<LocalDocument<T>>, doc: Partial<T>[]) {
-        const found = this.find(param) as LocalDocument<T>[];
+    update(param: Partial<LoneDocument<T>>, doc: Partial<T>[]) {
+        const found = this.find(param) as LoneDocument<T>[];
         let detail = { ok: false, n: 0 };
         if (found) {
             for (let i = 0; i < found.length; i++) {
@@ -114,7 +114,7 @@ export class LocalDB<T>{
         return detail;
     }
 
-    updateOne(param: Partial<LocalDocument<T>>, doc: Partial<T>) {
+    updateOne(param: Partial<LoneDocument<T>>, doc: Partial<T>) {
         const found = this.findOne(param);
         let detail = { ok: false, n: 0 };
 
@@ -136,8 +136,8 @@ export class LocalDB<T>{
         return detail;
     }
 
-    delete(param: Partial<LocalDocument<T>>) {
-        const found = this.find(param) as LocalDocument<T>[];
+    delete(param: Partial<LoneDocument<T>>) {
+        const found = this.find(param) as LoneDocument<T>[];
         let detail = { ok: false, n: 0 };
 
         if (found) {
@@ -160,7 +160,7 @@ export class LocalDB<T>{
         return detail;
     }
 
-    deleteOne(param: Partial<LocalDocument<T>>) {
+    deleteOne(param: Partial<LoneDocument<T>>) {
         const found = this.findOne(param);
         let detail = { ok: false, n: 0 };
 
