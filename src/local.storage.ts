@@ -1,4 +1,4 @@
-import { v4 as uuidV4 } from "uuid";
+import { randomUUID as uuidV4 } from "crypto";
 import { LoneDocument } from "./models/query.model";
 
 export class LoneDB<T>{
@@ -169,7 +169,7 @@ export class LoneDB<T>{
 
             let value = this.value.filter(v => {
                 let flag: boolean = true;
-                
+
                 if (v._id == found._id) {
                     detail.n++;
                     flag = false;
