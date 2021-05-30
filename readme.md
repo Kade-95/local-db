@@ -10,6 +10,8 @@ I was motivated with the need to store database tables on localStorage and also 
 
 Later in the future I hope to add more functionalities to this project, things like **Aggregation** and integrating awesome features like **RxJs**.
 
+On instanciation of the class **LoneDB** a new **Collection/Table** is created with the provided name if the collection doesn't exist already, else it will fetch the stored data and keep it ready for manipulation.
+
 ## ##
 ## ##
 
@@ -27,7 +29,6 @@ Later in the future I hope to add more functionalities to this project, things l
     <summary>Collection</summary>
     <span>This a group of documents(Like the Table in relational database)</span>
 </details>
-
 ## ##
 ## ##
 
@@ -90,5 +91,12 @@ Later in the future I hope to add more functionalities to this project, things l
         <p>Call deleteOne(doc: any)</p>
         <p>Delete the first document that match the query</p>
         <p>Returns the status of the operation and the number of affected documents which is 1</p>
+    </span>
+</details>
+<details>
+    <summary>Drop</summary>
+    <span>
+        <p>Call drop(name: string)</p>
+        <p>Delete the entire collection</p>
     </span>
 </details>
