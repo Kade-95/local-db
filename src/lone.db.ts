@@ -33,14 +33,14 @@ export class LoneDB<T>{
             this.setValue([]);
     }
 
-    find(doc?: Partial<LoneDocument<T>>) {
-        return doc
+    find(query?: Partial<LoneDocument<T>>) {
+        return query
             ? this.value.filter(v => {
                 let flag: boolean = false;
 
                 for (let k in v) {
-                    if ((doc as any)[k]) {
-                        flag = (v as any)[k] === (doc as any)[k];
+                    if ((query as any)[k]) {
+                        flag = (v as any)[k] === (query as any)[k];
 
                         if (!flag) return;
                     }
@@ -50,14 +50,14 @@ export class LoneDB<T>{
             : this.value;
     }
 
-    findOne(doc?: Partial<LoneDocument<T>>) {
-        return doc
+    findOne(query?: Partial<LoneDocument<T>>) {
+        return query
             ? this.value.find(v => {
                 let flag: boolean = false;
 
                 for (let k in v) {
-                    if ((doc as any)[k]) {
-                        flag = (v as any)[k] === (doc as any)[k];
+                    if ((query as any)[k]) {
+                        flag = (v as any)[k] === (query as any)[k];
 
                         if (!flag) return;
                     }
@@ -85,8 +85,8 @@ export class LoneDB<T>{
         return doc as LoneDocument<T>;
     }
 
-    update(param: Partial<LoneDocument<T>>, doc: Partial<T>[]) {
-        const found = this.find(param) as LoneDocument<T>[];
+    update(query: Partial<LoneDocument<T>>, doc: Partial<T>[]) {
+        const found = this.find(query) as LoneDocument<T>[];
         let detail = { ok: false, n: 0 };
         if (found) {
             for (let i = 0; i < found.length; i++) {
@@ -114,8 +114,8 @@ export class LoneDB<T>{
         return detail;
     }
 
-    updateOne(param: Partial<LoneDocument<T>>, doc: Partial<T>) {
-        const found = this.findOne(param);
+    updateOne(query: Partial<LoneDocument<T>>, doc: Partial<T>) {
+        const found = this.findOne(query);
         let detail = { ok: false, n: 0 };
 
         if (found) {
@@ -136,8 +136,8 @@ export class LoneDB<T>{
         return detail;
     }
 
-    delete(param: Partial<LoneDocument<T>>) {
-        const found = this.find(param) as LoneDocument<T>[];
+    delete(query: Partial<LoneDocument<T>>) {
+        const found = this.find(query) as LoneDocument<T>[];
         let detail = { ok: false, n: 0 };
 
         if (found) {
@@ -160,8 +160,8 @@ export class LoneDB<T>{
         return detail;
     }
 
-    deleteOne(param: Partial<LoneDocument<T>>) {
-        const found = this.findOne(param);
+    deleteOne(query: Partial<LoneDocument<T>>) {
+        const found = this.findOne(query);
         let detail = { ok: false, n: 0 };
 
         if (found) {
