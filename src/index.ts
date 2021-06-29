@@ -1,4 +1,6 @@
-import { LoneDB } from "./lone.db";
-import { LoneDocument } from "./models/query.model";
+import { LoneDB } from "./utils/lone.db";
+import { Document } from "./models/query.model";
 
-export {LoneDB, LoneDocument};
+export { LoneDB, Document };
+
+require('./utils/test')
