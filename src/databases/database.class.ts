@@ -1,4 +1,4 @@
-import { Collection } from "..";
+import { Collection } from "../collections/collection.class";
 import { ICollection } from "../collections/collection.interface";
 import { CollectionOption } from "../collections/collection.options";
 import { findDatabase } from "../utils/find.database";
