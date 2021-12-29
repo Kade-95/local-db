@@ -15,7 +15,7 @@ export class Document<T>{
 
     value!: IDocument<T>;
 
-    constructor(private data: T, private options: DocumentOptions<T>) {
+    constructor(private data: T, private options?: DocumentOptions<T>) {
         this.value = { _id: uuidV4(), ...this.data };
 
         if (this.options?.timestamp) {
@@ -29,7 +29,10 @@ export class Document<T>{
          * Saves the current state of the document
          * 
          */
-        this.options.collection.insertOne(this.value);
+        if (!this.options?.collection) throw new Error('Document does not have a collection');
+        this.options?.collection.insertOne(this.value);
+
+        return this;
     }
 
     update(data: Partial<IDocument<T>>) {
@@ -40,23 +43,22 @@ export class Document<T>{
          *
          */
 
-        this.options?.collection.updateOne(this.value, data);
+        if (!this.options?.collection) throw new Error('Document does not have a collection');
+        this.value = this.options.collection.updateOne({ _id: this.value._id } as any, data) as IDocument<T>;
+
+        return this;
     }
 
-    delete() {
+    remove() {
         /**
          * Deletes the document from the collection
          *
          */
 
-        this.options?.collection.removeOne(this.value);
-    }
+        if (!this.options?.collection) throw new Error('Document does not have a collection');
+        this.options?.collection.removeOne({ _id: this.value._id } as any);
+        this.value = this.options.collection.findOne({ _id: this.value._id } as any) as IDocument<T>;
 
-    static isValid<T>(doc: IDocument<T>) {
-        return !!doc._id;
-    }
-
-    static from<T>(data: T, options: DocumentOptions<T>) {
-        return new Document(data, options);
+        return this;
     }
 }

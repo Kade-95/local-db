@@ -1,6 +1,6 @@
 {
   "name": "@black-ink/lonedb",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "description": "This is a simple database management library that is built ontop of localStorage with similar syntax **BSON** syntax.\r I was motivated with the need to store database tables on localStorage and also be able to perform a couple of operations like: \r - Find\r - Insert\r - Update\r - Delete",
   "main": "lib/index.js",
   "module": "lib/index.esm.js",

@@ -8,9 +8,11 @@ global.localStorage = new Storage();
 
 let database: Database;
 
-describe('Create Database Collection', () => {
+describe('findAll Database Collections', () => {
     before(() => {
         database = new Database('Sample');
+        database.createCollection<Sample>('Sample');
+        database.createCollection<Sample>('Nope');
     });
 
     afterEach(() => {
@@ -21,9 +23,9 @@ describe('Create Database Collection', () => {
         database.drop();
     });
 
-    it('should be able to create a new Database Collection', () => {        
-        const collection = database.createCollection<Sample>('Sample');        
-        expect(collection).to.deep.include({ name: 'Sample', documents: [] });
-        expect(database.collections.length).equal(1);
+    it(`should find all database collections`, () => {
+        const collections = database.findAllCollections();
+        expect(collections[0]).to.deep.include({ name: 'Sample', documents: [] });
+        expect(collections.length).equals(2);
     });
 });

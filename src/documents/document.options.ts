@@ -11,6 +11,6 @@ export interface DocumentOptions<T> {
     * @type {T} - This is the type of the document
     */
 
-    collection: Collection<T>;
+    collection?: Collection<T>;
     timestamp?: boolean;
 }

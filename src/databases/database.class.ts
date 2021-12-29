@@ -2,6 +2,7 @@ import { Collection } from "..";
 import { ICollection } from "../collections/collection.interface";
 import { CollectionOption } from "../collections/collection.options";
 import { findDatabase } from "../utils/find.database";
+import { removeCollection } from "../utils/remove.collection";
 import { removeDatabase } from "../utils/remove.database";
 import { saveDatabase } from "../utils/save.database";
 
@@ -39,7 +40,6 @@ export class Database {
         return this.value;
     }
 
-
     constructor(public name: string) {
         if (!this.value) this.value = [];
     }
@@ -55,11 +55,11 @@ export class Database {
         * @returns {Collection<T>} - A new Collection
         */
 
-        const collection = new Collection(name, { database: this, ...options });        
+        const collection = new Collection(name, { database: this, ...options });
         return collection;
     }
 
-    getCollections() {
+    findAllCollections() {
         /**
         * @remarks
         * Gets all the collections in the database
@@ -69,7 +69,7 @@ export class Database {
         return this.value;
     }
 
-    getCollection<T>(name: string) {
+    findCollection<T>(name: string) {
         /**
         * @remarks
         * Fetches the collection with the name in the database
@@ -79,10 +79,10 @@ export class Database {
         * @returns {Collection<T>} - The collection with the name in the database
         */
 
-        return this.value.find(v => v.name == name) as Collection<T> | undefined;
+        return this.value.find(v => v.name == name) as ICollection<T>;
     }
 
-    deleteCollection(name: string) {
+    removeCollection(name: string) {
         /**
         * @remarks
         * Deletes collection with name in database
@@ -90,8 +90,10 @@ export class Database {
         * @param name - This is the name of the collection 
         */
 
-        const collection = new Collection(name);
-        collection.drop();
+        const collection = this.findCollection(name);
+        removeCollection(name, this.name);
+
+        return collection;
     }
 
     empty() {
