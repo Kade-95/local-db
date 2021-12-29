@@ -2,7 +2,7 @@
 
 ## Introduction ##
 This is a simple database management library that is built ontop of localStorage with similar syntax **BSON** syntax.
-I was motivated with the need to store database tables on localStorage and also be able to perform a couple of operations like: 
+I was motivated with the need to store database collections on localStorage and also be able to perform a couple of operations like: 
 - Find
 - Insert
 - Update
@@ -10,7 +10,7 @@ I was motivated with the need to store database tables on localStorage and also 
 
 Later in the future I hope to add more functionalities to this project, things like **Aggregation** and integrating awesome features like **RxJs**.
 
-On instanciation of the class **LoneDB** a new **Collection/Table** is created with the provided name if the collection doesn't exist already, else it will fetch the stored data and keep it ready for manipulation.
+On instanciation of the class **Collection** a new **Collection** is created with the provided name if the collection doesn't exist already, else it will fetch the stored data and keep it ready for manipulation.
 
 ## ##
 ## ##

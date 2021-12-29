@@ -1,4 +1,6 @@
-import { LoneDB } from "./utils/lone.db";
-import { Document } from "./models/query.model";
+import { Collection } from "./collections/collection.class";
+import { Database } from "./databases/database.class";
+import { Document } from "./documents/document.class";
+import { IDocument } from "./documents/document.interface";
 
-export { LoneDB, Document };
+export { Database, Collection, Document, IDocument };
