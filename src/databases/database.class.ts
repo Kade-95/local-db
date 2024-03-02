@@ -1,10 +1,8 @@
 import { Collection } from "../collections/collection.class";
 import { ICollection } from "../collections/collection.interface";
 import { CollectionOption } from "../collections/collection.options";
-import { findDatabase } from "../utils/find.database";
-import { removeCollection } from "../utils/remove.collection";
-import { removeDatabase } from "../utils/remove.database";
-import { saveDatabase } from "../utils/save.database";
+import { Engine } from "../engine/engine.class";
+import { EngineTypes } from "../models/engine.types";
 
 export class Database {
     /**
@@ -13,14 +11,19 @@ export class Database {
     *
     * @param value - This private member sets or gets the currently stored data
     * @param name - This is the name of the database
+    * @param engineType - This is the type of engine to use
+    * @param engine - This is the database engine
+
     */
+
+    engine!: Engine;
 
     private get value() {
         /**
         * @remarks
         * A get function used to fetch the current state of the database
         */
-        return findDatabase(this.name);
+        return this.engine.findDatabase(this.name);
     }
 
     private set value(value: ICollection<any>[]) {
@@ -28,7 +31,7 @@ export class Database {
         * @remarks
         * A set function used to set the current state of the database
         */
-        saveDatabase(this.name, value);
+        this.engine.saveDatabase(this.name, value);
     }
 
     get collections() {
@@ -40,7 +43,11 @@ export class Database {
         return this.value;
     }
 
-    constructor(public name: string) {
+    constructor(
+        public name: string,
+        public engineType: EngineTypes = EngineTypes.CODESTORAGE
+    ) {
+        this.engine = new Engine(this.engineType);
         if (!this.value) this.value = [];
     }
 
@@ -91,7 +98,7 @@ export class Database {
         */
 
         const collection = this.findCollection(name);
-        removeCollection(name, this.name);
+        this.engine.removeCollection(name, this.name);
 
         return collection;
     }
@@ -111,6 +118,6 @@ export class Database {
         * Delete database
         */
 
-        removeDatabase(this.name);
+        this.engine.removeDatabase(this.name);
     }
 }

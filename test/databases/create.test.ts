@@ -1,9 +1,9 @@
-import { Storage } from "./../../src/storage/storage.class";
+import { CodeStorage } from "./../../src/storage/code-storage.class";
 import * as chai from "chai";
 import { Database } from "../../src";
 
 const expect = chai.expect;
-global.localStorage = new Storage();
+global.localStorage = new CodeStorage();
 
 let database: Database;
 

@@ -1,10 +1,10 @@
-import { Storage } from "./../../src/storage/storage.class";
+import { CodeStorage } from "./../../src/storage/code-storage.class";
 import * as chai from "chai";
 import { Sample } from "../../src/models/sample.interface";
 import { Document } from "../../src/documents/document.class";
 
 const expect = chai.expect;
-global.localStorage = new Storage();
+global.localStorage = new CodeStorage();
 
 const data: Sample = { title: 'Sample', amount: 5 };
 

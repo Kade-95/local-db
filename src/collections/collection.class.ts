@@ -1,12 +1,8 @@
 import { Document } from "../documents/document.class";
 import { IDocument } from "../documents/document.interface";
 import { DocumentOptions } from "../documents/document.options";
+import { Engine } from "../engine/engine.class";
 import { IQueryOption } from "../models/query-option.interface";
-import { findCollection } from "../utils/find.collection";
-import { fromEntity } from "../utils/from.entity";
-import { removeCollection } from "../utils/remove.collection";
-import { saveCollection } from "../utils/save.collection";
-import { toEntity } from "../utils/to.entity";
 import { ICollection } from "./collection.interface";
 import { CollectionOption } from "./collection.options";
 import { v4 as uuidV4 } from "uuid";
@@ -24,13 +20,16 @@ export class Collection<T>{
     * @param entity - This retrives the current state of the Collection as an @type {Entity}
     * @param data - This retrives the current state of the Collection publicly
     * @param options - This is an optional settings for the collection
+    * @param engine - This is the collection engine    
     * 
     * @type {T} - This is the schema of the documents of the collection
     */
 
+    engine!: Engine;
+
     private documentOptions: DocumentOptions<T> = {
         collection: this,
-        timestamp: this.options?.timestamp
+        timestamp: this.options?.timestamp,
     };
 
     private get value() {
@@ -38,7 +37,7 @@ export class Collection<T>{
         * @remarks
         * A get function used to fetch the current state of the collection
         */
-        return findCollection<T>(this.name, this.options?.database?.name) as ICollection<T>;
+        return this.engine.findCollection<T>(this.name, this.options?.database?.name) as ICollection<T>;
     }
 
     private set value(value: ICollection<T>) {
@@ -48,7 +47,7 @@ export class Collection<T>{
         *
         */
         value = { ...value, updatedAt: new Date() };
-        saveCollection(this.name, value, this.options?.database?.name);
+        this.engine.saveCollection(value, this.options?.database?.name);
     }
 
     get entity() {
@@ -56,7 +55,7 @@ export class Collection<T>{
         * @remarks
         * A get function used to fetch the current state of the collection as an entity
         */
-        return toEntity(this.documents, '_id');
+        return this.engine.toEntity(this.documents, '_id');
     }
 
     get documents() {
@@ -95,7 +94,7 @@ export class Collection<T>{
         return this.value.updatedAt;
     }
 
-    paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
+    private paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
         let sorted = list;
         const { sort, limit = list.length, skip = 0 } = options;
 
@@ -119,15 +118,16 @@ export class Collection<T>{
     constructor(
         public name: string,
         private options?: CollectionOption<T>
-    ) {
+    ) {        
+        this.engine = this.options?.database?.engine || new Engine(this.options?.engineType);
+
         if (!this.value) {
-            const value: ICollection<T> = { _id: uuidV4(), name: this.name, documents: [] };
+            let value: ICollection<T> = { _id: uuidV4(), name: this.name, documents: [] };
             if (this.options?.timestamp) {
-                value.createdAt = !!value.createdAt ? value.createdAt : new Date();
-                value.updatedAt = !!value.updatedAt ? value.updatedAt : new Date();
+                value = { ...value, createdAt: new Date, updatedAt: new Date() };
             }
 
-            this.value = value
+            this.value = value;
         };
     }
 
@@ -230,7 +230,7 @@ export class Collection<T>{
             entity[found._id] = found;
         }
 
-        this.value = { ...this.value, documents: fromEntity(entity) };
+        this.value = { ...this.value, documents: this.engine.fromEntity(entity) };
         return list;
     }
 
@@ -255,7 +255,7 @@ export class Collection<T>{
             const { entity } = this;
             entity[found._id] = found;
 
-            this.value = { ...this.value, documents: fromEntity(entity) };
+            this.value = { ...this.value, documents: this.engine.fromEntity(entity) };
         }
 
         return found;
@@ -278,7 +278,7 @@ export class Collection<T>{
             delete entity[found._id];
         }
 
-        this.value = { ...this.value, documents: fromEntity(entity) };
+        this.value = { ...this.value, documents: this.engine.fromEntity(entity) };
         return list;
     }
 
@@ -297,7 +297,7 @@ export class Collection<T>{
         if (found) {
             const { entity } = this;
             delete entity[found._id];
-            this.value = { ...this.value, documents: fromEntity(entity) };
+            this.value = { ...this.value, documents: this.engine.fromEntity(entity) };
         }
 
         return found;
@@ -308,7 +308,7 @@ export class Collection<T>{
         * @remarks
         * This is used to delete a collection
         */
-        removeCollection(this.name, this.options?.database?.name);
+        this.engine.removeCollection(this.name, this.options?.database?.name);
     }
 
     empty() {

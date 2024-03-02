@@ -1,12 +1,12 @@
 import { Collection } from "./../../src/collections/collection.class";
-import { Storage } from "./../../src/storage/storage.class";
+import { CodeStorage } from "./../../src/storage/code-storage.class";
 import { Sample } from "./../../src/models/sample.interface";
 
 import * as chai from "chai";
 import { after } from "mocha";
 
 const expect = chai.expect;
-global.localStorage = new Storage();
+global.localStorage = new CodeStorage();
 
 const data: Sample = {
     title: "New Item",

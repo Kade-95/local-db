@@ -1,14 +1,14 @@
-export class Storage {
+import { IStorage } from "../models/storage.type";
+
+export class LocalStorage implements IStorage{
     /**
      * @remarks
      * This is a volatile version of a localStorage
      * To be used for testing in the absence of the actual localStorage
      * 
-     * @param {any} data - This is the data stored
-     * @param {number} length - This is the number of items stored
      */
 
-    private data: any = {};
+    data = localStorage;
 
     get length() {
         /**
@@ -17,10 +17,8 @@ export class Storage {
          * 
          * @returns {number} - Number of items stored
          */
-        return Object.keys(this.data).length;
+        return localStorage.length;
     }
-
-    constructor() { }
 
     setItem(key: string, value: string) {
         /**
@@ -31,7 +29,7 @@ export class Storage {
          * @param {string} value - This is value of the item to be stored
          */
 
-        this.data[key] = value == 'null' ? undefined : value;
+        localStorage.setItem(key, value);
     }
 
     getItem(key: string) {
@@ -44,7 +42,7 @@ export class Storage {
          * @returns {string} - The value of the item stored with @param key
          */
 
-        return this.data[key] || null;
+        return localStorage.getItem(key);
     }
 
     clear() {
@@ -53,7 +51,7 @@ export class Storage {
          * Deletes all the items in the store
          */
 
-        this.data = {};
+        localStorage.clear();
     }
 
     removeItem(key: string) {
@@ -64,7 +62,7 @@ export class Storage {
          * @param {string} key - This is the key of the item to be deleted
          */
 
-        delete this.data[key];
+        localStorage.removeItem(key);
     }
 
     key(index: number) {
@@ -77,6 +75,6 @@ export class Storage {
          * @returns {string} - The key of the item
          */
 
-        return Object.keys(this.data)[index];
+        return localStorage.key(index);
     }
 }
