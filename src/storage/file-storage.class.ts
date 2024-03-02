@@ -83,7 +83,9 @@ export class FileStorage implements IStorage {
          */
 
         this.data = {};
-        rmSync(this.path);
+        if (this.exists) {
+            rmSync(this.path);
+        }
     }
 
     removeItem(key: string) {
