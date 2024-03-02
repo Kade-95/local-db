@@ -1,6 +1,7 @@
 import { Document } from "../documents/document.class";
 import { IDocument } from "../documents/document.interface";
 import { DocumentOptions } from "../documents/document.options";
+import { IQueryOption } from "../models/query-option.interface";
 import { findCollection } from "../utils/find.collection";
 import { fromEntity } from "../utils/from.entity";
 import { removeCollection } from "../utils/remove.collection";
@@ -94,6 +95,27 @@ export class Collection<T>{
         return this.value.updatedAt;
     }
 
+    paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
+        let sorted = list;
+        const { sort, limit = list.length, skip = 0 } = options;
+
+        for (const key in sort) {
+            if (Object.prototype.hasOwnProperty.call(sort, key)) {
+                const flag = sort[key] === 'desc' ? -1 : 1;
+                sorted = list.sort((a: any, b: any) => {
+                    return a[key] > b[key]
+                        ? flag
+                        : a[key] < b[key]
+                            ? -flag
+                            : 0
+                            });
+            }
+        }
+
+        const result = sorted.slice(skip, skip + limit);
+        return result;
+    }
+
     constructor(
         public name: string,
         private options?: CollectionOption<T>
@@ -109,7 +131,7 @@ export class Collection<T>{
         };
     }
 
-    find(query?: Partial<IDocument<T>>) {
+    find(query?: Partial<IDocument<T>>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to query a collection to fetch the matching list of documents
@@ -118,8 +140,8 @@ export class Collection<T>{
         *
         * @returns {IDocument<T>[]} - The found matched documents
         */
-        return query
-            ? this.documents.filter(v => {
+
+        const list =  query ? this.documents.filter(v => {
                 let flag: boolean = false;
 
                 for (let k in v) {
@@ -130,11 +152,13 @@ export class Collection<T>{
                     }
                 }
                 return flag;
-            })
-            : this.documents;
+            }) : this.documents;
+
+        
+        return this.paginate(list, options);
     }
 
-    findOne(query?: Partial<IDocument<T>>) {
+    findOne(query?: Partial<IDocument<T>>, options?: IQueryOption) {
         /**
        * @remarks
        * This is used to query a collection to fetch the first matched document
@@ -143,20 +167,7 @@ export class Collection<T>{
        *
        * @returns {IDocument<T>} - The matched document if any
        */
-        return query
-            ? this.documents.find(v => {
-                let flag: boolean = false;
-
-                for (let k in v) {
-                    if ((query as any)[k]) {
-                        flag = (v as any)[k] === (query as any)[k];
-
-                        if (!flag) return;
-                    }
-                }
-                return flag;
-            })
-            : this.documents[0];
+        return this.find(query, options)[0];
     }
 
     insert(list: T[]) {
@@ -192,14 +203,14 @@ export class Collection<T>{
         */
 
         const doc = (new Document<T>(data, this.documentOptions).value);
-        Collection.verifyRequired(this, data);
-        Collection.verifyUnique(this, data);
+        Collection.verifyRequired(this, data as any);
+        Collection.verifyUnique(this, data as any);
 
         this.value = { ...this.value, documents: [...this.documents, doc] };
         return doc;
     }
 
-    update(query: Partial<IDocument<T>>, doc: Partial<T>) {
+    update(query: Partial<IDocument<T>>, doc: Partial<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -210,7 +221,7 @@ export class Collection<T>{
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list: IDocument<T>[] = this.find(query).map(found => ({ ...found, ...doc }));
+        const list: IDocument<T>[] = this.find(query, options).map(found => ({ ...found, ...doc }));
         Collection.verifyMultipleRequired(this, list);
         Collection.verifyMultipleUnique(this, list);
 
@@ -223,7 +234,7 @@ export class Collection<T>{
         return list;
     }
 
-    updateOne(query: Partial<IDocument<T>>, doc: Partial<T>) {
+    updateOne(query: Partial<IDocument<T>>, doc: Partial<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -234,7 +245,7 @@ export class Collection<T>{
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        let found = this.findOne(query);
+        let found = this.findOne(query, options);
 
         if (found) {
             found = { ...found, ...doc };
@@ -250,7 +261,7 @@ export class Collection<T>{
         return found;
     }
 
-    remove(query: Partial<IDocument<T>>) {
+    remove(query: Partial<IDocument<T>>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to delete a list of documents in a collection
@@ -260,7 +271,7 @@ export class Collection<T>{
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list = this.find(query) as IDocument<T>[];
+        const list = this.find(query, options) as IDocument<T>[];
         const { entity } = this;
 
         for (let found of list) {
@@ -271,7 +282,7 @@ export class Collection<T>{
         return list;
     }
 
-    removeOne(query: Partial<IDocument<T>>) {
+    removeOne(query: Partial<IDocument<T>>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to delete a document in a collection
@@ -281,7 +292,7 @@ export class Collection<T>{
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        const found = this.findOne(query);
+        const found = this.findOne(query, options);
 
         if (found) {
             const { entity } = this;
