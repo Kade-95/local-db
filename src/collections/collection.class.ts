@@ -96,8 +96,10 @@ export class Collection<T>{
 
     private paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
         let sorted = list;
-        const { sort, limit = list.length, skip = 0 } = options;
-
+        const { sort, limit = 0, skip = 0 } = options;
+        const skipStart = limit ? skip * limit : skip;
+        const skipStop = limit ? skipStart + limit : list.length;        
+        
         for (const key in sort) {
             if (Object.prototype.hasOwnProperty.call(sort, key)) {
                 const flag = sort[key] === 'desc' ? -1 : 1;
@@ -111,7 +113,7 @@ export class Collection<T>{
             }
         }
 
-        const result = sorted.slice(skip, skip + limit);
+        const result = sorted.slice(skipStart, skipStop);
         return result;
     }
 
@@ -131,7 +133,7 @@ export class Collection<T>{
         };
     }
 
-    find(query?: Partial<IDocument<T>>, options?: IQueryOption) {
+    find(query: Partial<IDocument<T>> = {}, options: IQueryOption = {}) {
         /**
         * @remarks
         * This is used to query a collection to fetch the matching list of documents
@@ -141,7 +143,8 @@ export class Collection<T>{
         * @returns {IDocument<T>[]} - The found matched documents
         */
 
-        const list =  query ? this.documents.filter(v => {
+        const list = Object.keys(query).length
+            ? this.documents.filter(v => {
                 let flag: boolean = false;
 
                 for (let k in v) {
