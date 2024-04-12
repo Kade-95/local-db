@@ -10,7 +10,7 @@ global.localStorage = new CodeStorage();
 
 const data: Sample = {
     title: "New Item",
-    amount: 50
+    amount: 50,
 }
 
 let collection: Collection<Sample>;
@@ -66,7 +66,6 @@ describe('Find documents in a Collection', () => {
 
     it('should sort, skip and limit items based on attribute', () => {
         collection.insertOne({ ...data, amount: 90 });
-
         const found = collection.find({ title: data.title }, { sort: { amount: 'desc' }, skip: 1, limit: 1});  
         expect(found.length).eqls(1);      
         expect(found[0]).to.deep.include({ amount: data.amount + 1 });

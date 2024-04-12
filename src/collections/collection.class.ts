@@ -3,6 +3,7 @@ import { IDocument } from "../documents/document.interface";
 import { DocumentOptions } from "../documents/document.options";
 import { Engine } from "../engine/engine.class";
 import { IQueryOption } from "../models/query-option.interface";
+import { IQuery } from "../models/query.interface";
 import { ICollection } from "./collection.interface";
 import { CollectionOption } from "./collection.options";
 import { v4 as uuidV4 } from "uuid";
@@ -94,6 +95,21 @@ export class Collection<T>{
         return this.value.updatedAt;
     }
 
+    private locate(query: IQuery<T> = {}) {
+        return this.documents.filter(v => {                
+            let flag: boolean = false;
+            for (let k in v) {                         
+                if (Object.prototype.hasOwnProperty.call(query, k)) {
+                    const check = (query as any)[k];
+                    const value = (v as any)[k];
+                    flag = value === check;                        
+                    if (!flag) return;
+                }
+            }
+            return flag;
+        })
+    }
+
     private paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
         let sorted = list;
         const { sort, limit = 0, skip = 0 } = options;
@@ -112,7 +128,7 @@ export class Collection<T>{
                             });
             }
         }
-
+        
         const result = sorted.slice(skipStart, skipStop);
         return result;
     }
@@ -133,40 +149,29 @@ export class Collection<T>{
         };
     }
 
-    find(query: Partial<IDocument<T>> = {}, options: IQueryOption = {}) {
+    find(query: IQuery<T> = {}, options: IQueryOption = {}) {
         /**
         * @remarks
         * This is used to query a collection to fetch the matching list of documents
         * 
-        * @param {Partial<IDocument<T>>} query this is the query that the defines the search parameters
+        * @param {IQuery<T>} query this is the query that the defines the search parameters
         *
         * @returns {IDocument<T>[]} - The found matched documents
         */
 
         const list = Object.keys(query).length
-            ? this.documents.filter(v => {
-                let flag: boolean = false;
-
-                for (let k in v) {
-                    if ((query as any)[k]) {
-                        flag = (v as any)[k] === (query as any)[k];
-
-                        if (!flag) return;
-                    }
-                }
-                return flag;
-            }) : this.documents;
-
+            ? this.locate(query) 
+            : this.documents;        
         
         return this.paginate(list, options);
     }
 
-    findOne(query?: Partial<IDocument<T>>, options?: IQueryOption) {
+    findOne(query?: IQuery<T>, options?: IQueryOption) {
         /**
        * @remarks
        * This is used to query a collection to fetch the first matched document
        * 
-       * @param {Partial<IDocument<T>>} query this is the query that the defines the search parameters
+       * @param {IQuery<T>} query this is the query that the defines the search parameters
        *
        * @returns {IDocument<T>} - The matched document if any
        */
@@ -213,12 +218,12 @@ export class Collection<T>{
         return doc;
     }
 
-    update(query: Partial<IDocument<T>>, doc: Partial<T>, options?: IQueryOption) {
+    update(query: IQuery<T>, doc: Partial<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
         * 
-        * @param {Partial<IDocument<T>>} query - this is the query that the defines the search parameters for the documents to be updated
+        * @param {IQuery<T>} query - this is the query that the defines the search parameters for the documents to be updated
         * @param {Partial<T>} doc - This is the new state of the documents to be updated
         *
         * @returns {IDocument<T>[]} - The affected documents in the collection
@@ -237,12 +242,12 @@ export class Collection<T>{
         return list;
     }
 
-    updateOne(query: Partial<IDocument<T>>, doc: Partial<T>, options?: IQueryOption) {
+    updateOne(query: IQuery<T>, doc: Partial<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
         * 
-        * @param {Partial<IDocument<T>>} query - this is the query that the defines the search parameters for the document to be updated
+        * @param {IQuery<T>} query - this is the query that the defines the search parameters for the document to be updated
         * @param {Partial<T>} doc - This is the new state of the document to be updated
         *
         * @returns {IDocument<T>} - The affected document in the collection
@@ -264,12 +269,12 @@ export class Collection<T>{
         return found;
     }
 
-    remove(query: Partial<IDocument<T>>, options?: IQueryOption) {
+    remove(query: IQuery<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to delete a list of documents in a collection
         * 
-        * @param {Partial<IDocument<T>>} query - this is the query that the defines the search parameters for the documents to be deleted
+        * @param {IQuery<T>} query - this is the query that the defines the search parameters for the documents to be deleted
         *
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
@@ -285,12 +290,12 @@ export class Collection<T>{
         return list;
     }
 
-    removeOne(query: Partial<IDocument<T>>, options?: IQueryOption) {
+    removeOne(query: IQuery<T>, options?: IQueryOption) {
         /**
         * @remarks
         * This is used to delete a document in a collection
         * 
-        * @param {Partial<IDocument<T>>} query - this is the query that the defines the search parameters for the document to be deleted
+        * @param {IQuery<T>} query - this is the query that the defines the search parameters for the document to be deleted
         *
         * @returns {IDocument<T>} - The affected document in the collection
         */
@@ -354,13 +359,13 @@ export class Collection<T>{
         return Collection.from(name, collection.documents);
     }
 
-    public static verifyRequired<T>(collection: Collection<T>, data: Partial<IDocument<T>>) {
+    public static verifyRequired<T>(collection: Collection<T>, data: IQuery<T>) {
         /**
          * @remarks
          * Verifies if all required items in @param collection are provided in @param data
          *
          * @param {Collection<T>} collection - This is the collection to be verified with
-         * @param {Partial<IDocument<T>>} data - This is the document to verify
+         * @param {IQuery<T>} data - This is the document to verify
          * 
          * @throws {Error} - An error if some of the required items are not provided in the @param data
          */
@@ -376,13 +381,13 @@ export class Collection<T>{
         if (required.length) throw new Error(required.join('\n').trim());
     }
 
-    public static verifyUnique<T>(collection: Collection<T>, data: Partial<IDocument<T>>) {
+    public static verifyUnique<T>(collection: Collection<T>, data: IQuery<T>) {
         /**
          * @remarks
          * Verifies if all unique items in @param collection doesn't have duplicates in @param data
          *
          * @param {Collection<T>} collection - This is the collection to be verified with
-         * @param {Partial<IDocument<T>>} data - This is the document to verify
+         * @param {IQuery<T>} data - This is the document to verify
          * 
          * @throws {Error} - An error if some of the unique items have duplicates in @param data
          */
@@ -401,14 +406,14 @@ export class Collection<T>{
 
     public static verifyMultipleRequired<T>(
         collection: Collection<T>,
-        list: Partial<IDocument<T>>[]
+        list: IQuery<T>[]
     ) {
         /**
          * @remarks
          * Verifies if all required items in @param collection are provided in all documents in @param list
          *
          * @param {Collection<T>} collection - This is the collection to be verified with
-         * @param {Partial<IDocument<T>>} list - This is the list of documents to verify
+         * @param {IQuery<T>} list - This is the list of documents to verify
          * 
          * @throws {Error} - An error if some of the required items are not provided in any of the documents in the @param list
          */
@@ -430,14 +435,14 @@ export class Collection<T>{
 
     public static verifyMultipleUnique<T>(
         collection: Collection<T>,
-        list: Partial<IDocument<T>>[]
+        list: IQuery<T>[]
     ) {
         /**
          * @remarks
          * Verifies if all unique items in @param collection doesn't have duplicates in @param list
          *
          * @param {Collection<T>} collection - This is the collection to be verified with
-         * @param {Partial<IDocument<T>>} list - This is the list of documents to verify
+         * @param {IQuery<T>} list - This is the list of documents to verify
          * 
          * @throws {Error} - An error if some of the unique items have duplicates in any of documents in the @param list
          */
