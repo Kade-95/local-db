@@ -1,6 +1,6 @@
 import { IDocument } from "../documents/document.interface";
 
-export type IQuery<T> = (
+export interface IAggragtion<T> {
     /**
     * @remarks
     * The datatype for a document interface implementing the @type {IBase}
@@ -9,5 +9,6 @@ export type IQuery<T> = (
     * @type {IDocument} - This is the document type
     */
    
-    Partial<IDocument<T>>
-);
+    not?: Partial<IDocument<T>>;
+    like?: {[P in keyof T]?: string }
+};

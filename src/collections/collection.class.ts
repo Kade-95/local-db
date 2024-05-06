@@ -2,14 +2,16 @@ import { Document } from "../documents/document.class";
 import { IDocument } from "../documents/document.interface";
 import { DocumentOptions } from "../documents/document.options";
 import { Engine } from "../engine/engine.class";
+import { IAggragtion } from "../models/aggregation.interface";
 import { IQueryOption } from "../models/query-option.interface";
 import { IQuery } from "../models/query.interface";
+import { Aggregation } from "./aggregation.class";
 import { ICollection } from "./collection.interface";
 import { CollectionOption } from "./collection.options";
 import { v4 as uuidV4 } from "uuid";
 
 
-export class Collection<T>{
+export class Collection<T> extends Aggregation<T> {
 
     /**
     * @remarks
@@ -95,48 +97,11 @@ export class Collection<T>{
         return this.value.updatedAt;
     }
 
-    private locate(query: IQuery<T> = {}) {
-        return this.documents.filter(v => {                
-            let flag: boolean = false;
-            for (let k in v) {                         
-                if (Object.prototype.hasOwnProperty.call(query, k)) {
-                    const check = (query as any)[k];
-                    const value = (v as any)[k];
-                    flag = value === check;                        
-                    if (!flag) return;
-                }
-            }
-            return flag;
-        })
-    }
-
-    private paginate(list: IDocument<T>[], options: IQueryOption = { sort: { createdAt: 'desc' } }) {
-        let sorted = list;
-        const { sort, limit = 0, skip = 0 } = options;
-        const skipStart = limit ? skip * limit : skip;
-        const skipStop = limit ? skipStart + limit : list.length;        
-        
-        for (const key in sort) {
-            if (Object.prototype.hasOwnProperty.call(sort, key)) {
-                const flag = sort[key] === 'desc' ? -1 : 1;
-                sorted = list.sort((a: any, b: any) => {
-                    return a[key] > b[key]
-                        ? flag
-                        : a[key] < b[key]
-                            ? -flag
-                            : 0
-                            });
-            }
-        }
-        
-        const result = sorted.slice(skipStart, skipStop);
-        return result;
-    }
-
     constructor(
         public name: string,
         private options?: CollectionOption<T>
     ) {        
+        super();
         this.engine = this.options?.database?.engine || new Engine(this.options?.engineType);
 
         if (!this.value) {
@@ -149,7 +114,7 @@ export class Collection<T>{
         };
     }
 
-    find(query: IQuery<T> = {}, options: IQueryOption = {}) {
+    find(query: IQuery<T> = {}, aggregation: IAggragtion<T> = {}, options: IQueryOption = {}) {
         /**
         * @remarks
         * This is used to query a collection to fetch the matching list of documents
@@ -158,15 +123,12 @@ export class Collection<T>{
         *
         * @returns {IDocument<T>[]} - The found matched documents
         */
-
-        const list = Object.keys(query).length
-            ? this.locate(query) 
-            : this.documents;        
         
+        const list = this.query(this.documents, query, aggregation);      
         return this.paginate(list, options);
     }
 
-    findOne(query?: IQuery<T>, options?: IQueryOption) {
+    findOne(query?: IQuery<T>, aggregation: IAggragtion<T> = {}, options?: IQueryOption) {
         /**
        * @remarks
        * This is used to query a collection to fetch the first matched document
@@ -175,7 +137,7 @@ export class Collection<T>{
        *
        * @returns {IDocument<T>} - The matched document if any
        */
-        return this.find(query, options)[0];
+        return this.find(query, aggregation, options)[0];
     }
 
     insert(list: T[]) {
@@ -218,7 +180,7 @@ export class Collection<T>{
         return doc;
     }
 
-    update(query: IQuery<T>, doc: Partial<T>, options?: IQueryOption) {
+    update(query: IQuery<T>, doc: Partial<T>, aggregation?: IAggragtion<T>) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -229,7 +191,7 @@ export class Collection<T>{
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list: IDocument<T>[] = this.find(query, options).map(found => ({ ...found, ...doc }));
+        const list: IDocument<T>[] = this.find(query, aggregation).map(found => ({ ...found, ...doc }));
         Collection.verifyMultipleRequired(this, list);
         Collection.verifyMultipleUnique(this, list);
 
@@ -242,7 +204,7 @@ export class Collection<T>{
         return list;
     }
 
-    updateOne(query: IQuery<T>, doc: Partial<T>, options?: IQueryOption) {
+    updateOne(query: IQuery<T>, doc: Partial<T>, aggregation?: IAggragtion<T>) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -253,7 +215,7 @@ export class Collection<T>{
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        let found = this.findOne(query, options);
+        let found = this.findOne(query, aggregation);
 
         if (found) {
             found = { ...found, ...doc };
@@ -269,7 +231,7 @@ export class Collection<T>{
         return found;
     }
 
-    remove(query: IQuery<T>, options?: IQueryOption) {
+    remove(query: IQuery<T>, aggregation?: IAggragtion<T>) {
         /**
         * @remarks
         * This is used to delete a list of documents in a collection
@@ -279,7 +241,7 @@ export class Collection<T>{
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list = this.find(query, options) as IDocument<T>[];
+        const list = this.find(query, aggregation) as IDocument<T>[];
         const { entity } = this;
 
         for (let found of list) {
@@ -290,7 +252,7 @@ export class Collection<T>{
         return list;
     }
 
-    removeOne(query: IQuery<T>, options?: IQueryOption) {
+    removeOne(query: IQuery<T>, aggregation?: IAggragtion<T>) {
         /**
         * @remarks
         * This is used to delete a document in a collection
@@ -300,7 +262,7 @@ export class Collection<T>{
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        const found = this.findOne(query, options);
+        const found = this.findOne(query, aggregation);
 
         if (found) {
             const { entity } = this;
