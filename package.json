@@ -11,7 +11,7 @@
   "scripts": {
     "start": "npm run build && npm-run-all --parallel watch serve",
     "build": "webpack",
-    "bundle": "rollup -c",
+    "bundle": "webpack && rollup -c && npm run docs",
     "watch": "webpack --watch",
     "serve": "cd dist && live-server",
     "docs": "npx typedoc --out docs src && cd docs && live-server",

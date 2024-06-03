@@ -1,4 +1,5 @@
 import { IDocument } from "../documents/document.interface";
+import { IAggragtion } from "./aggregation.interface";
 
 export type IQuery<T> = (
     /**
@@ -9,5 +10,5 @@ export type IQuery<T> = (
     * @type {IDocument} - This is the document type
     */
    
-    Partial<IDocument<T>>
+    Partial<IDocument<T> | IAggragtion<IDocument<T>>> | any
 );

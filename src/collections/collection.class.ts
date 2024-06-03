@@ -2,7 +2,6 @@ import { Document } from "../documents/document.class";
 import { IDocument } from "../documents/document.interface";
 import { DocumentOptions } from "../documents/document.options";
 import { Engine } from "../engine/engine.class";
-import { IAggragtion } from "../models/aggregation.interface";
 import { IQueryOption } from "../models/query-option.interface";
 import { IQuery } from "../models/query.interface";
 import { Aggregation } from "./aggregation.class";
@@ -114,7 +113,7 @@ export class Collection<T> extends Aggregation<T> {
         };
     }
 
-    find(query: IQuery<T> = {}, aggregation: IAggragtion<T> = {}, options: IQueryOption = {}) {
+    find(query: IQuery<T> = {}, options: IQueryOption = {}) {
         /**
         * @remarks
         * This is used to query a collection to fetch the matching list of documents
@@ -124,11 +123,12 @@ export class Collection<T> extends Aggregation<T> {
         * @returns {IDocument<T>[]} - The found matched documents
         */
         
-        const list = this.query(this.documents, query, aggregation);      
+        const list = this.query(this.documents, query);
+      
         return this.paginate(list, options);
     }
 
-    findOne(query?: IQuery<T>, aggregation: IAggragtion<T> = {}, options?: IQueryOption) {
+    findOne(query?: IQuery<T>, options?: IQueryOption) {
         /**
        * @remarks
        * This is used to query a collection to fetch the first matched document
@@ -137,7 +137,7 @@ export class Collection<T> extends Aggregation<T> {
        *
        * @returns {IDocument<T>} - The matched document if any
        */
-        return this.find(query, aggregation, options)[0];
+        return this.find(query, options)[0];
     }
 
     insert(list: T[]) {
@@ -180,7 +180,7 @@ export class Collection<T> extends Aggregation<T> {
         return doc;
     }
 
-    update(query: IQuery<T>, doc: Partial<T>, aggregation?: IAggragtion<T>) {
+    update(query: IQuery<T>, doc: Partial<T>) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -191,7 +191,7 @@ export class Collection<T> extends Aggregation<T> {
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list: IDocument<T>[] = this.find(query, aggregation).map(found => ({ ...found, ...doc }));
+        const list: IDocument<T>[] = this.find(query).map(found => ({ ...found, ...doc }));
         Collection.verifyMultipleRequired(this, list);
         Collection.verifyMultipleUnique(this, list);
 
@@ -204,7 +204,7 @@ export class Collection<T> extends Aggregation<T> {
         return list;
     }
 
-    updateOne(query: IQuery<T>, doc: Partial<T>, aggregation?: IAggragtion<T>) {
+    updateOne(query: IQuery<T>, doc: Partial<T>) {
         /**
         * @remarks
         * This is used to update a list of documents in a collection
@@ -215,7 +215,7 @@ export class Collection<T> extends Aggregation<T> {
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        let found = this.findOne(query, aggregation);
+        let found = this.findOne(query);
 
         if (found) {
             found = { ...found, ...doc };
@@ -231,7 +231,7 @@ export class Collection<T> extends Aggregation<T> {
         return found;
     }
 
-    remove(query: IQuery<T>, aggregation?: IAggragtion<T>) {
+    remove(query: IQuery<T>) {
         /**
         * @remarks
         * This is used to delete a list of documents in a collection
@@ -241,7 +241,7 @@ export class Collection<T> extends Aggregation<T> {
         * @returns {IDocument<T>[]} - The affected documents in the collection
         */
 
-        const list = this.find(query, aggregation) as IDocument<T>[];
+        const list = this.find(query) as IDocument<T>[];
         const { entity } = this;
 
         for (let found of list) {
@@ -252,7 +252,7 @@ export class Collection<T> extends Aggregation<T> {
         return list;
     }
 
-    removeOne(query: IQuery<T>, aggregation?: IAggragtion<T>) {
+    removeOne(query: IQuery<T>) {
         /**
         * @remarks
         * This is used to delete a document in a collection
@@ -262,7 +262,7 @@ export class Collection<T> extends Aggregation<T> {
         * @returns {IDocument<T>} - The affected document in the collection
         */
 
-        const found = this.findOne(query, aggregation);
+        const found = this.findOne(query);
 
         if (found) {
             const { entity } = this;
@@ -321,7 +321,7 @@ export class Collection<T> extends Aggregation<T> {
         return Collection.from(name, collection.documents);
     }
 
-    public static verifyRequired<T>(collection: Collection<T>, data: IQuery<T>) {
+    public static verifyRequired<T>(collection: Collection<T>, data: Partial<IDocument<T>>) {
         /**
          * @remarks
          * Verifies if all required items in @param collection are provided in @param data
@@ -343,7 +343,7 @@ export class Collection<T> extends Aggregation<T> {
         if (required.length) throw new Error(required.join('\n').trim());
     }
 
-    public static verifyUnique<T>(collection: Collection<T>, data: IQuery<T>) {
+    public static verifyUnique<T>(collection: Collection<T>, data: Partial<IDocument<T>>) {
         /**
          * @remarks
          * Verifies if all unique items in @param collection doesn't have duplicates in @param data
@@ -366,10 +366,7 @@ export class Collection<T> extends Aggregation<T> {
         if (unique.length) throw new Error(unique.join('\n').trim());
     }
 
-    public static verifyMultipleRequired<T>(
-        collection: Collection<T>,
-        list: IQuery<T>[]
-    ) {
+    public static verifyMultipleRequired<T>(collection: Collection<T>, list: Partial<IDocument<T>>[]) {
         /**
          * @remarks
          * Verifies if all required items in @param collection are provided in all documents in @param list
@@ -395,10 +392,7 @@ export class Collection<T> extends Aggregation<T> {
         if (required.length) throw new Error(required.join('\n').trim());
     }
 
-    public static verifyMultipleUnique<T>(
-        collection: Collection<T>,
-        list: IQuery<T>[]
-    ) {
+    public static verifyMultipleUnique<T>(collection: Collection<T>, list: Partial<IDocument<T>>[]) {
         /**
          * @remarks
          * Verifies if all unique items in @param collection doesn't have duplicates in @param list
