@@ -4,6 +4,8 @@ import { Document } from "./documents/document.class";
 import { IDocument } from "./documents/document.interface";
 import { EngineTypes } from "./models/engine.types";
 import { CodeStorage } from "./storage/code-storage.class"
+import { IQuery } from "./models/query.interface";
+import { IQueryOption } from "./models/query-option.interface";
 
 export {
     Database,
@@ -11,5 +13,7 @@ export {
     Document,
     IDocument,
     CodeStorage,
-    EngineTypes
+    EngineTypes,
+    IQuery,
+    IQueryOption
 };
