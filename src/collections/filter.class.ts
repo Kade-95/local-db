@@ -1,63 +1,58 @@
 import { IDocument } from "../documents/document.interface";
-import { IAggragtion } from "../models/aggregation.interface";
+import { IFilter } from "../models/filter.interface";
 import { IQueryOption } from "../models/query-option.interface";
 import { IQuery } from "../models/query.interface";
 
-export class Aggregation<T> {
-    list = [
-        '@not',
-        '@like',
-        '@includes',
-        '@has'
-    ];
-
-    private getAggregation(data: IQuery<T>) {
-        const { query, aggregation } = Object.keys(data).reduce((acc: any, red) => {
+export class Filter<T> {
+    filterActions: {[P in keyof IFilter<T>]?: (query: IQuery<T>, document: IDocument<T>) => boolean } = {
+        '@not': this.notFilter,
+        '@like': this.likeFilter,
+        '@includes': this.includesFilter,
+        '@has': this.hasFilter,
+        '@or': this.orFilter
+    };
+        
+    private getFilter(data: IQuery<T>) {
+        const { query, filter } = Object.keys(data).reduce((acc: any, red) => {
             if (red.startsWith('@')) {
-                acc.aggregation = { ...acc.aggregation, [red]: (data as any)[red] }
+                acc.filter = { ...acc.filter, [red]: (data as any)[red] }
             }
             else {
                 acc.query = { ...acc.query, [red]: (data as any)[red] }
             }
 
             return acc;
-        }, { query: {}, aggregation: {} });
+        }, { query: {}, filter: {} });
 
-        return { query, aggregation };
+        return { query, filter };
     }
 
-    constructor () {
-
-    }
-
-    protected defaultFilter (query: IQuery<T>, document: IDocument<T>) {
-        let flag = true;
+    protected andFilter (query: IQuery<T>, document: IDocument<T>) {
+        let flag = true;        
         for (let attribute in query) {                         
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = (query as any)[attribute];
                 const value = (document as any)[attribute];
-                flag = value === check;              
+                flag = value === check;             
+                if (!flag) {
+                    break;
+                }                 
             }
         }
         
         return flag;
     }
 
-    protected aggregate(document: IDocument<T>, aggregation: IAggragtion<T>) {
-        let flag = true;
-        if (aggregation['@not']) {
-            flag = flag && this.notFilter(aggregation['@not'], document);
+    protected orFilter (query: IQuery<T>, document: IDocument<T>) {
+        let flag = false;                
+        for (let attribute in query) {                         
+            if (Object.prototype.hasOwnProperty.call(document, attribute)) {
+                const check = (query as any)[attribute];
+                const value = (document as any)[attribute];
+                flag = (value === check) || flag;       
+            }
         }
-        else if (aggregation['@like']) {
-            flag = flag && this.likeFilter(aggregation['@like'], document);
-        }
-        else if (aggregation['@includes']) {
-            flag = flag && this.includesFilter(aggregation['@includes'], document);
-        }
-        else if (aggregation['@has']) {
-            flag = flag && this.hasFilter(aggregation['@has'], document);
-        }
-
+        
         return flag;
     }
 
@@ -67,7 +62,10 @@ export class Aggregation<T> {
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = (query as any)[attribute];
                 const value = (document as any)[attribute];
-                flag = value !== check;              
+                flag = value !== check;   
+                if (!flag) {
+                    break;
+                }         
             }
         }
         
@@ -80,7 +78,10 @@ export class Aggregation<T> {
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = String((query as any)[attribute]);
                 const value = String((document as any)[attribute]);
-                flag = value.includes(check);            
+                flag = value.includes(check);  
+                if (!flag) {
+                    break;
+                }          
             }
         }
         
@@ -94,6 +95,9 @@ export class Aggregation<T> {
                 const check = (query as any)[attribute] as Array<string>;
                 const value = (document as any)[attribute] as string;                
                 flag = check.includes(value);   
+                if (!flag) {
+                    break;
+                } 
             }
         }
         
@@ -106,9 +110,10 @@ export class Aggregation<T> {
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = (query as any)[attribute] as string;
                 const value = (document as any)[attribute] as Array<any>;
-                console.log({ check, value });
-
-                flag = value.includes(check);   
+                flag = value.includes(check);  
+                if (!flag) {
+                    break;
+                }  
             }
         }
         
@@ -116,12 +121,17 @@ export class Aggregation<T> {
     }
 
     protected query(documents: IDocument<T>[], data: IQuery<T> = {}) {
-        const { query, aggregation } = this.getAggregation(data);
-        
+        const { query, filter } = this.getFilter(data);        
         return documents.filter(doc => {                            
-            let flag: boolean = this.defaultFilter(query, doc);            
-            if (aggregation) {
-                flag = flag && this.aggregate(doc, aggregation);
+            let flag: boolean = this.andFilter(query, doc);  
+
+            if (filter) {                
+                const filterFlag = Object.keys(filter).reduce((acc: boolean, red: string) => {
+                    const filterQuery = (filter as any)[red];
+                    const filterFlag = (this.filterActions as any)[red](filterQuery, doc);                    
+                    return acc && filterFlag;
+                }, true);
+                flag = flag && filterFlag;
             }
             return flag;
         })

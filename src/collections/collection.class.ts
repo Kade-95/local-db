@@ -4,13 +4,13 @@ import { DocumentOptions } from "../documents/document.options";
 import { Engine } from "../engine/engine.class";
 import { IQueryOption } from "../models/query-option.interface";
 import { IQuery } from "../models/query.interface";
-import { Aggregation } from "./aggregation.class";
+import { Filter } from "./filter.class";
 import { ICollection } from "./collection.interface";
 import { CollectionOption } from "./collection.options";
 import { v4 as uuidV4 } from "uuid";
 
 
-export class Collection<T> extends Aggregation<T> {
+export class Collection<T> extends Filter<T> {
 
     /**
     * @remarks

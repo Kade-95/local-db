@@ -39,10 +39,18 @@ describe('Find documents in a Collection', () => {
     });
 
     it('should find all the items that matches the query', () => {
-        collection.insertOne(Object.assign({}, { ...data, title: 'Another Item' }));
+        collection.insertOne(Object.assign({}, { ...data, title: 'Another Item', amount: 45 }));
         const found = collection.find({ title: data.title });
         
         expect(found.length).eq(2);        
+        expect(found[0]).to.deep.include({ title: data.title });
+    });
+
+    it('should find all the items that matches the multiple query', () => {
+        collection.insertOne(Object.assign({}, { ...data, title: 'Another Item', amount: 45 }));
+        const found = collection.find({ title: data.title, amount: 50 });
+        
+        expect(found.length).eq(1);        
         expect(found[0]).to.deep.include({ title: data.title });
     });
 
@@ -101,6 +109,21 @@ describe('Find documents in a Collection', () => {
     it('should find all the items that are within the specified array', () => {
         collection.insertOne(Object.assign({}, { ...data, list: [0, 2, 4, 6] }));
         const found = collection.find({ '@has': { list: 4 }});
+        
+        expect(found.length).eq(1);
+        expect(found[0].list).to.deep.members([0, 2, 4, 6]);
+    });
+
+    it('should find all the items that match any of the specified or-filter', () => {
+        collection.insertOne(Object.assign({}, { ...data, title: 'Another item', amount: 45 }));        
+        const found = collection.find({ '@or': { title: data.title, amount: 45 }});
+        
+        expect(found.length).eq(3);
+    });
+
+    it('should find all the items that match all the specified filters', () => {
+        collection.insertOne(Object.assign({}, { ...data, title: 'Another item', amount: 45, list: [0, 2, 4, 6] }));        
+        const found = collection.find({ '@or': { title: data.title, amount: 45 }, '@has': { list: 4 }});
         
         expect(found.length).eq(1);
         expect(found[0].list).to.deep.members([0, 2, 4, 6]);

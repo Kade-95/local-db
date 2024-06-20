@@ -41,9 +41,7 @@ describe('Remove documents in a Collection', () => {
     });
 
     it('should fail if no item matches the query', () => {
-        const removed = collection.remove({ _id: 'hello' });
-        console.log(removed);
-        
+        const removed = collection.remove({ _id: 'hello' });        
         expect(removed.length).eqls(0);
     });
 });
