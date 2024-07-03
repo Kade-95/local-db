@@ -5,9 +5,10 @@ import { IQuery } from "../models/query.interface";
 
 export class Filter<T> {
     filterActions: {[P in keyof IFilter<T>]?: (query: IQuery<T>, document: IDocument<T>) => boolean } = {
+        '@and': this.andFilter,
         '@not': this.notFilter,
         '@like': this.likeFilter,
-        '@includes': this.includesFilter,
+        '@in': this.inFilter,
         '@has': this.hasFilter,
         '@or': this.orFilter
     };
@@ -27,9 +28,9 @@ export class Filter<T> {
         return { query, filter };
     }
 
-    protected andFilter (query: IQuery<T>, document: IDocument<T>) {
-        let flag = true;        
-        for (let attribute in query) {                         
+    protected andFilter (query: IQuery<T>, document: IDocument<T>) {        
+        let flag = false;        
+        for (let attribute in query) {                                     
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = (query as any)[attribute];
                 const value = (document as any)[attribute];
@@ -39,7 +40,6 @@ export class Filter<T> {
                 }                 
             }
         }
-        
         return flag;
     }
 
@@ -57,7 +57,7 @@ export class Filter<T> {
     }
 
     protected notFilter (query: IQuery<T>, document: IDocument<T>) {
-        let flag = true;        
+        let flag = false;        
         for (let attribute in query) {                         
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = (query as any)[attribute];
@@ -73,7 +73,7 @@ export class Filter<T> {
     }
 
     protected likeFilter (query: {[P in keyof T]?: string }, document: IDocument<T>) {
-        let flag = true;
+        let flag = false;        
         for (let attribute in query) {                         
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
                 const check = String((query as any)[attribute]);
@@ -88,13 +88,13 @@ export class Filter<T> {
         return flag;
     }
 
-    protected includesFilter (query: {[P in keyof T]?: [string] }, document: IDocument<T>) {        
-        let flag = true;
+    protected inFilter (query: {[P in keyof T]?: [string] }, document: IDocument<T>) {        
+        let flag = false;        
         for (let attribute in query) {                         
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
-                const check = (query as any)[attribute] as Array<string>;
-                const value = (document as any)[attribute] as string;                
-                flag = check.includes(value);   
+                const check = (query as any)[attribute] as Array<any>;
+                const value = (document as any)[attribute] as any; 
+                flag = check.includes(value);  
                 if (!flag) {
                     break;
                 } 
@@ -105,12 +105,19 @@ export class Filter<T> {
     }
 
     protected hasFilter (query: {[P in keyof T]?: string }, document: IDocument<T>) {        
-        let flag = true;
+        let flag = false;        
         for (let attribute in query) {                         
             if (Object.prototype.hasOwnProperty.call(document, attribute)) {
-                const check = (query as any)[attribute] as string;
+                const check = (query as any)[attribute] as any;
                 const value = (document as any)[attribute] as Array<any>;
-                flag = value.includes(check);  
+                if (typeof check === 'object') {
+                    const found = this.query(value, check);  
+                    flag = !!found.length;                                      
+                }              
+                else {
+                    flag = value.includes(check);  
+                }
+                
                 if (!flag) {
                     break;
                 }  
@@ -120,15 +127,18 @@ export class Filter<T> {
         return flag;
     }
 
-    protected query(documents: IDocument<T>[], data: IQuery<T> = {}) {
-        const { query, filter } = this.getFilter(data);        
+    protected query(documents: IDocument<T>[], data: IQuery<T> = {}) {        
+        const { query, filter } = this.getFilter(data);                        
         return documents.filter(doc => {                            
-            let flag: boolean = this.andFilter(query, doc);  
+            let flag: boolean = !!Object.values(query).length
+                ? this.andFilter(query, doc)
+                : true;
 
             if (filter) {                
                 const filterFlag = Object.keys(filter).reduce((acc: boolean, red: string) => {
-                    const filterQuery = (filter as any)[red];
-                    const filterFlag = (this.filterActions as any)[red](filterQuery, doc);                    
+                    const filterQuery = (filter as any)[red];    
+                    const boundFilterAction = (this.filterActions as any)[red].bind(this);                
+                    const filterFlag = boundFilterAction(filterQuery, doc);                    
                     return acc && filterFlag;
                 }, true);
                 flag = flag && filterFlag;

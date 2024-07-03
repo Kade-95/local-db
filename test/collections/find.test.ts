@@ -100,13 +100,13 @@ describe('Find documents in a Collection', () => {
 
     it('should find all the items that are within the specified array', () => {
         collection.insertOne(Object.assign({}, { ...data, title: 'Another Item' }));
-        const found = collection.find({ '@includes': { title: ['Another Item'] }});
+        const found = collection.find({ '@in': { title: ['Another Item'] }});
         
         expect(found.length).eq(1);
         expect(found[0]).to.deep.include({ title: 'Another Item' });
     });
 
-    it('should find all the items that are within the specified array', () => {
+    it('should find all the items that has a list matching the specified query', () => {
         collection.insertOne(Object.assign({}, { ...data, list: [0, 2, 4, 6] }));
         const found = collection.find({ '@has': { list: 4 }});
         
@@ -127,5 +127,21 @@ describe('Find documents in a Collection', () => {
         
         expect(found.length).eq(1);
         expect(found[0].list).to.deep.members([0, 2, 4, 6]);
+    });
+
+    it('should find all the items that are within the specified array of objects', () => {
+        collection.insertOne(Object.assign({}, { ...data, list: [{ id: 4, name: 'ken'}] }));
+        const found = collection.find({ '@has': { list: { id: 4 } }});
+                
+        expect(found.length).eq(1);
+        expect((found[0].list as any[])[0]).to.contain({ id: 4});
+    });
+
+    it('should find all the items that has a list that are like the query', () => {
+        collection.insertOne(Object.assign({}, { ...data, list: [{ id: 4, name: 'ken'}] }));
+        const found = collection.find({ '@has': { list: { '@like': { name: 'k' } } }});
+                
+        expect(found.length).eq(1);
+        expect((found[0].list as any[])[0]).to.contain({ id: 4});
     });
 });
